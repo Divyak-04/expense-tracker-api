@@ -1,51 +1,25 @@
 # AI Notes
 
-<!--
-DRAFT — Divya, replace the bracketed parts with what's actually true
-once you've read through the code and run it yourself. See the note
-at the end of this file for why that matters.
--->
+## 1. What was AI generated vs written by me
 
-## 1. What was AI-generated vs. written by me
+I used Claude to scaffold the whole project: the FastAPI app in src/main.py, the Pydantic models in src/models.py, the JSON file storage layer in src/storage.py, and the test suite in tests/test_expenses.py. I did not write the initial code by hand.
 
-- The overall structure (FastAPI app in `src/main.py`, Pydantic
-  models in `src/models.py`, JSON-file storage in `src/storage.py`,
-  and the test suite in `tests/test_expenses.py`) was scaffolded with
-  AI assistance (Claude).
-- [Describe what you personally changed, added, or rewrote —
-  e.g. renamed variables, changed an endpoint's response shape,
-  added/removed a test case, fixed something that didn't match your
-  understanding of the requirements, adjusted error handling, etc.
-  Be specific — this is the part reviewers weight most heavily.]
+What I did instead was treat the generated code as something I had to fully understand before I could call it mine. I went through each file with Claude explaining it line by line, in plain terms, until I could describe what every endpoint does and why, without looking anything up. I also set up the whole environment myself from scratch,created the virtual environment, installed the dependencies, ran the server, and pushed it to GitHub, so the parts around the code are as much mine as the code itself.
 
 ## 2. What I validated or tested, and why
 
-- Ran `pytest tests/ -v` locally — all 11 tests pass. [Confirm this
-  yourself on your machine and note the actual result.]
-- Started the server with `uvicorn src.main:app --reload` and manually
-  exercised each endpoint with `curl` / the `/docs` Swagger UI:
-  adding an expense, listing/filtering by category, checking totals,
-  checking the monthly summary, and deleting an expense.
-- [Add anything specific you checked — e.g. "confirmed a negative
-  amount is rejected with a 422", "confirmed deleting a non-existent
-  id returns 404", "restarted the server and confirmed expenses.json
-  persisted the data" — and say *why* you checked it, e.g. because
-  the spec calls it out explicitly, or because it's an edge case AI
-  output commonly gets wrong.]
+I ran pytest tests/ -v myself on my own machine and got all 11 tests passing. I did not just trust that number, I read through what each test was actually checking, like rejecting a negative amount or a blank title, and deleting an expense that does not exist and getting a 404 back.
 
-## 3. AI suggestions I didn't use, and why
+After that I started the server with uvicorn and went through every endpoint manually using the Swagger docs at /docs, not just the automated tests. This is actually where I caught something myself: when I tested the category filter, I had left the sample field as "category": "string" instead of typing a real category like "food", so filtering by food came back empty. At first I thought something was broken, but going back through it I realized it was my own test data, not the code. I re-ran it with a real category value and it worked as expected. That was a useful reminder to actually check my own inputs before assuming the API is wrong.
 
-- [If you asked for or were offered alternatives — e.g. a different
-  storage approach (SQLite vs. JSON file), UUID vs. integer ids, a
-  different validation strategy — note what you didn't take and your
-  reasoning. If nothing was offered/declined, say so honestly rather
-  than inventing something.]
+I also manually confirmed the totals endpoint gives the right overall number and the right breakdown by category, that the monthly summary groups correctly by year and month, and that deleting an expense actually removes it from the list on a follow up GET request.
 
----
-**Note to self before submitting:** this section is explicitly graded,
-and a generic or copy-pasted AI_NOTES.md costs marks even with solid
-code. Fill it in only with things you actually did — read the three
-source files end to end, run the server and the tests yourself, and
-write down what you genuinely checked and changed. If something in
-the code doesn't make sense to you, that's worth fixing or asking
-about before you submit, not glossing over.
+## 3. AI suggestions I did not use, and why
+
+Honestly, I did not reject any specific AI suggestion in this build, Claude generated the structure in one pass and I reviewed and tested it rather than asking for alternatives. I would rather say that plainly than invent a rejection that did not happen.
+
+The one thing I would flag as a limitation, not something I changed, is that expenses are stored in a local JSON file rather than a real database. That is fine for a take home assignment of this size, but if this were going into production I would want to move to something like SQLite so multiple users and larger data sets are handled properly.
+
+## A note on how I like to work with AI
+
+I enjoy prompt engineering and I use AI a lot, but my rule for myself is that I am not allowed to submit something I cannot explain. So with this project, once the code worked, I made Claude walk me through every file and every endpoint like I was learning it from zero, asked questions until the gaps closed, and only then started writing this document. If someone asks me about the storage locking, the validation rules, or why the totals endpoint is structured the way it is, I can answer that directly now.
